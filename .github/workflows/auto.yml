@@ -1,0 +1,28 @@
+name: 自动收割任务
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # 每 4 小时运行一次，确保同步最及时
+  workflow_dispatch:      # 允许手动点击运行
+
+jobs:
+  run_sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v3
+
+      - name: 运行 Python 脚本
+        run: |
+          pip install requests
+          python update_links.py
+
+      - name: 将结果推送到仓库
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "LinkCollector"
+          git add targets.txt
+          git commit -m "Auto Update: $(date)" || exit 0
+          git push
